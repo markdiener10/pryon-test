@@ -1,0 +1,240 @@
+package main
+
+import (
+	_ "context"
+	_ "encoding/json"
+	_ "fmt"
+	_ "log"
+	_ "net/http"
+	_ "time"
+)
+
+// Exercise 1: Modify GetBody to propagate the context to the http client.
+
+// Exercise 2: Modify GetBody to use log the ip + port of the api server.
+// The http client should use this ip address to avoid a second DNS lookup.
+
+func main() {
+	/*
+		ctx, cancel := context.WithTimeout(context.Background(), 1*time.Second)
+		defer cancel()
+
+		usersResp, err := GetBody(ctx, "https://reqres.in/api/users")
+		if err != nil {
+			panic(err)
+		}
+
+		//https://reqres.in/api/users")
+		//(remoteip)127.0.0.1:443 /api/users
+
+		fmt.Printf("usersResp: %+v\n", usersResp)
+	*/
+}
+
+/*
+func GetBody(ctx context.Context, endpointURL string) (interface{}, error) {
+
+	var client = http.Client{}
+
+	req, err := http.NewRequestWithContext(ctx, "GET", endpointURL, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		log.Printf("error during request: %s\n", err.Error())
+
+		return nil, err
+	}
+
+	dialer := &net.Dialer{
+		Timeout:   30 * time.Second,
+		KeepAlive: 30 * time.Second,
+	}
+
+	dialer.DialContext
+
+	DefaultTransport := &Transport{
+		DialContext: dialer,
+	}
+
+	defer resp.Body.Close()
+
+	var body interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&body); err != nil {
+		log.Printf("error decoding response body as json: %s\n", err.Error())
+
+		return nil, err
+	}
+
+	return body, err
+}
+*/
+///////////////////
+
+package main
+ 
+import (
+    "fmt"
+    "math/rand"
+    "reflect"
+    "testing"
+    "time"
+    "sync"
+)
+
+var 
+  wg sync.WaitGroup
+ 
+// Event - defines an event understood by the system - contains a pattern ID,
+// a value, and a timestamp.
+type Event struct {
+    // The type of the event
+    patternID int64
+    // The contents of the event
+    value string
+    // A timestamp defining time order - treat as epoch
+    timestamp int64
+}
+ 
+// handleEvent - handles an individual event
+func handleEvent(event *Event) error {
+    //fmt.Printf("PINGA")      
+    time.Sleep(10 * time.Millisecond)
+    //fmt.Printf("%v\n", *event)
+    //fmt.Printf("PINGB")    
+    return nil
+}
+ 
+// eventLoop - starts the event loop
+func eventLoop(processingChan <-chan *Event, processedEvents *int) {
+    go func() {
+        for {
+            select {
+            case event, ok := <-processingChan:
+            
+                if ok {
+                  
+                    //fmt.Println("oka",ok)
+                                  
+                    handleEvent(event)
+                    *processedEvents = *processedEvents + 1
+                    wg.Done()
+                    fmt.Println(*processedEvents)
+                    
+                    processingChan.close()
+
+                    //fmt.Println("okb")
+                    
+                }
+            }
+            //fmt.Println("loop")                    
+        }
+
+    }()
+}
+ 
+// TestEventProcessing - test goroutine processing
+func TestEventProcessing(t *testing.T) {
+    numEvents := 100
+    processingChan := make(chan *Event, numEvents)
+    processedEvents := 0
+    
+    eventLoop(processingChan, &processedEvents)          
+    
+    wg = sync.WaitGroup{}
+    wg.Add(100)
+ 
+    events := createEvents(numEvents)
+    for _, event := range events {
+      processingChan <- event
+    }
+    
+    if processedEvents == 100 {
+      
+    }
+    wg.Wait()
+      
+    
+    //fmt.Println("Wait 5")
+    //time.Sleep(5 * time.Second)
+    //fmt.Println("Wait 5 Out")
+    ///Wait here for a process == 100
+
+ 
+    assertEqual(t, processedEvents, numEvents, "event count doesn't match")
+}
+ 
+// TestEventCreation - test event creation generates the correct number of events
+func TestEventCreation(t *testing.T) {
+    for numEvents := 0; numEvents < 20; numEvents++ {
+        events := createEvents(numEvents)
+        assertEqual(t, len(events), numEvents, "event count doesn't match")
+    }
+}
+  
+// ****************************************************
+// *********** IGNORE CODE AFTER THIS POINT ***********
+// ****************************************************
+  
+func main() {
+    testSuite := []testing.InternalTest{
+        {"TestEventProcessing", TestEventProcessing},
+        {"TestEventCreation", TestEventCreation},
+        // Space for more tests...
+    }
+    testing.Main(matcher, testSuite, nil, nil)
+}
+ 
+func matcher(a, b string) (bool, error) {
+    return a == b, nil
+}
+ 
+func assertEqual(t *testing.T, value interface{}, expected interface{}, msg string) {
+    t.Helper()
+    if fmt.Sprintf("%v:%v", value, reflect.TypeOf(value)) != fmt.Sprintf("%v:%v", expected, reflect.TypeOf(expected)) {
+        t.Error(fmt.Sprintf("%s - got:%v, expected:%v", msg, value, expected))
+    }
+}
+ 
+func assert(t *testing.T, match bool, msg string) {
+    t.Helper()
+    if !match {
+        t.Error(msg)
+    }
+}
+ 
+func max(a, b int) int {
+    if a > b {
+        return a
+    }
+    return b
+}
+ 
+func randomString(n int) string {
+    var letter = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
+ 
+    b := make([]rune, n)
+    for i := range b {
+        b[i] = letter[rand.Intn(len(letter))]
+    }
+    return string(b)
+}
+ 
+func createEvents(numEvents int) []*Event {
+    valOptions := []string{}
+    for optionCount := 1; optionCount <= max(numEvents/10, 1); optionCount++ {
+        valOptions = append(valOptions, randomString(10))
+    }
+ 
+    events := make([]*Event, numEvents)
+    for eventNumber := 0; eventNumber < numEvents; eventNumber++ {
+        events[eventNumber] = &Event{
+            patternID: int64(rand.Intn(5)),
+            value:     valOptions[rand.Intn(len(valOptions))],
+            timestamp: int64(eventNumber),
+        }
+    }
+    return events
+}
